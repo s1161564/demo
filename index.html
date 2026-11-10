@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>校園通 CampusPass — 家校通告簡化與翻譯助手</title>
+<style>
+  :root{
+    --ink:#1d2b2f; --accent:#1f4e5a; --accent-d:#14353e; --gold:#c9a227;
+    --cream:#f7f5f0; --line:#d8d3c8; --muted:#6b7274; --pale:#e8eef0;
+    --warn:#9e3b2f; --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cream);color:var(--ink);
+    font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.55;}
+  a{color:var(--accent)}
+  header{background:var(--accent-d);color:#fff;padding:20px 26px;}
+  header .brand{font-size:24px;font-weight:700;letter-spacing:.5px}
+  header .brand span{color:var(--gold)}
+  header .sub{color:#b8cbcf;font-size:13px;margin-top:4px}
+  .wrap{max-width:1200px;margin:0 auto;padding:22px 18px 60px}
+  .grid{display:grid;grid-template-columns:minmax(320px,5fr) minmax(360px,6fr);gap:20px;align-items:start}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .panel h2{font-size:15px;margin:0 0 12px;color:var(--accent);letter-spacing:.5px}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{flex:1;min-width:90px;text-align:center;padding:9px 4px;border:1px solid var(--line);
+    border-radius:8px;cursor:pointer;font-size:13px;background:#fff;color:var(--muted)}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:26px 12px;text-align:center;color:var(--muted);cursor:pointer}
+  .drop:hover{border-color:var(--accent)}
+  textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px;resize:vertical}
+  .row{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;
+    font-size:14px;cursor:pointer;font-weight:600}
+  button:hover{background:var(--accent-d)}
+  button.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  button.gold{background:var(--gold);color:#1d2b2f}
+  button.small{padding:6px 10px;font-size:12px}
+  select{font-size:14px;padding:7px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .hint{font-size:12px;color:var(--muted)}
+  details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+  details summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:600}
+  .field{margin:8px 0}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+  .field input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+  /* results */
+  .result-block{border-top:1px solid var(--line);padding:14px 0}
+  .result-block:first-child{border-top:none;padding-top:0}
+  .result-block h3{font-size:12px;letter-spacing:1px;color:var(--gold);margin:0 0 8px;text-transform:uppercase}
+  .title-line{font-size:19px;font-weight:700}
+  ul.bullets{margin:6px 0;padding-left:20px}
+  ul.bullets li{margin:5px 0;font-size:15px}
+  .plainbox{background:var(--pale);border-left:4px solid var(--accent);padding:12px;border-radius:0 8px 8px 0;font-size:15px}
+  .transbox{background:#fbfaf7;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:15px;min-height:44px}
+  .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  input[type=range]{flex:1;min-width:140px}
+  .calbtn{display:inline-flex;align-items:center;gap:6px}
+  .date-chip{display:inline-block;background:var(--pale);border:1px solid var(--line);border-radius:999px;
+    padding:4px 12px;font-size:13px;color:var(--accent);font-weight:600;margin-top:6px}
+  .disclaimer{background:#fbf3e4;border:1px solid #e6d5a8;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a5d10}
+  .orig{margin-top:8px}
+  .orig summary{font-size:13px;color:var(--accent)}
+  .orig pre{white-space:pre-wrap;font-family:inherit;background:#fbfaf7;border:1px solid var(--line);
+    border-radius:8px;padding:12px;font-size:13.5px;margin:8px 0 0}
+  .busy{background:var(--gold);color:#1d2b2f;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:12px;display:none}
+  .busy.show{display:block}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:999px;font-size:13px;display:none;z-index:50;max-width:90vw}
+  .toast.show{display:block}
+  .empty{color:var(--muted);font-size:14px;padding:8px 0}
+  .sample-list{display:flex;flex-direction:column;gap:8px}
+  .sample{border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;font-size:13px}
+  .sample:hover{border-color:var(--accent)}
+  .sample b{display:block;color:var(--accent)}
+  .sample span{color:var(--muted);font-size:12px}
+  .badge{display:inline-block;font-size:11px;background:var(--pale);color:var(--accent);
+    border-radius:999px;padding:2px 8px;margin-left:6px;font-weight:600}
+  footer{background:var(--accent-d);color:#8fa4a8;font-size:12px;text-align:center;padding:16px}
+  footer b{color:#c8d8db}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">校園通 <span>CampusPass</span></div>
+  <div class="sub">AI 雙語學校通知簡化與家校溝通助手 · ITC2010 Digital Literacy 小組專題雛型</div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+
+    <!-- ============ 輸入區 ============ -->
+    <section class="panel">
+      <h2>① 輸入通告</h2>
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-mode="file">上傳圖片 / PDF</div>
+        <div class="tab" data-mode="text">貼上文字</div>
+        <div class="tab" data-mode="sample">範例通告</div>
+      </div>
+
+      <div id="modeFile">
+        <div class="drop" id="drop">📷 點擊或拖入檔案<br>
+          <span class="hint">支援 JPG / PNG / PDF（圖片會以 OCR 辨識，PDF 會抽取文字）</span></div>
+        <input type="file" id="fileInput" accept="image/*,.pdf" hidden />
+      </div>
+
+      <div id="modeText" style="display:none">
+        <textarea id="textInput" placeholder="在此貼上學校通告全文…"></textarea>
+      </div>
+
+      <div id="modeSample" style="display:none">
+        <div class="sample-list" id="sampleList"></div>
+      </div>
+
+      <div class="row">
+        <button id="btnProcess">② 分析通知</button>
+        <span class="hint" id="status"></span>
+      </div>
+
+      <details>
+        <summary>⚙️ 進階設定（AI 摘要與翻譯需 API Key）</summary>
+        <div class="field">
+          <label>Google Gemini API Key（可選，存於本機瀏覽器 localStorage，不會上載到任何伺服器）</label>
+          <input type="password" id="apiKey" placeholder="留空則使用離線／範例模式">
+        </div>
+        <div class="field">
+          <label>模型名稱</label>
+          <input type="text" id="modelName" value="gemini-2.5-flash">
+        </div>
+        <div class="hint">
+          免費申請：<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+          。沒有 Key 也能使用「範例通告」完整示範，或對貼上的文字做日期抽取、語音朗讀與加入日曆。
+        </div>
+      </details>
+
+      <div class="busy" id="busy"></div>
+    </section>
+
+    <!-- ============ 結果區 ============ -->
+    <section class="panel" id="resultPanel">
+      <h2>結果</h2>
+      <div class="empty" id="emptyState">左邊載入一份通告後，點「分析通知」。</div>
+
+      <div id="results" style="display:none">
+        <div class="result-block">
+          <h3>活動</h3>
+          <div class="title-line" id="rTitle"></div>
+        </div>
+
+        <div class="result-block">
+          <h3>精華摘要 · 3 句</h3>
+          <ul class="bullets" id="rBullets"></ul>
+        </div>
+
+        <div class="result-block">
+          <h3>平易版（口語化）</h3>
+          <div class="plainbox" id="rPlain"></div>
+        </div>
+
+        <div class="result-block">
+          <h3>多語種翻譯</h3>
+          <div class="row">
+            <select id="langSelect">
+              <option value="en">English 英文</option>
+              <option value="ur">اردو 烏爾都語</option>
+              <option value="ne">नेपाली 尼泊爾語</option>
+            </select>
+            <button class="small" id="btnTranslate">翻譯</button>
+          </div>
+          <div class="transbox" id="rTrans">—</div>
+        </div>
+
+        <div class="result-block">
+          <h3>雙語語音朗讀</h3>
+          <div class="row">
+            <button class="small gold" id="btnSpeakCant">🔊 粵語朗讀</button>
+            <button class="small" id="btnSpeakEn">🔊 English 朗讀</button>
+            <button class="small ghost" id="btnPause">暫停 / 繼續</button>
+            <button class="small ghost" id="btnStop">停止</button>
+          </div>
+          <div class="row">
+            <span class="hint">語速</span>
+            <input type="range" id="rate" min="0.5" max="1.8" step="0.1" value="1">
+            <span class="hint" id="rateVal">1.0×</span>
+          </div>
+          <div class="hint">⚠️ 粵語（zh-HK）語音依瀏覽器與作業系統而異；Chrome 桌面版通常有，Safari 可能需系統粵語語音。</div>
+        </div>
+
+        <div class="result-block">
+          <h3>一鍵加入日曆</h3>
+          <div class="date-chip" id="rDate">未偵測到日期</div>
+          <div class="ctl">
+            <a class="calbtn" id="gcal" target="_blank" rel="noopener" style="display:none">
+              <button class="small">📅 Google Calendar</button>
+            </a>
+            <button class="small gold" id="btnICS">🍎 Apple Calendar (.ics)</button>
+          </div>
+        </div>
+
+        <div class="result-block">
+          <div class="disclaimer">
+            ⚠️ AI 生成內容僅供參考，請以學校原文為準。處理均在本機瀏覽器進行；僅當你使用 OCR 或 Gemini 時，
+            內容才會傳送至相關服務作即時處理，我們不儲存、不用於訓練。
+          </div>
+        </div>
+
+        <details class="orig">
+          <summary>查看原文對照</summary>
+          <pre id="rOrig"></pre>
+        </details>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  校園通 CampusPass — 把艱澀校務通告，變成每一位家長都睇得明、聽得到、記得住的東西。
+  <b>AI 生成 · 僅供參考 · 請以原文為準</b>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   校園通 CampusPass  —  單頁雛型
+   功能：OCR / 摘要 / 翻譯 / 語音朗讀 / 加入日曆
+   資料流：輸入 -> 取文字 -> (可選) Gemini 摘要 -> 呈現
+   無 API Key 時：範例通告有預先算好的結果；貼上的文字則做
+                 離線摘要（日期 + 首三行）+ 朗讀 + 日曆。
+   ============================================================ */
+
+const $ = (id) => document.getElementById(id);
+let KEY = localStorage.getItem("cp_key") || "";
+let MODEL = localStorage.getItem("cp_model") || "gemini-2.5-flash";
+
+const state = {
+  rawText: "",            // 原文
+  title: "",              // 活動名稱
+  bullets: [],            // 3 句摘要
+  plain: "",              // 平易版
+  datetime: null,         // {start:Date, end:Date} 或 null
+  translations: {},       // {en,ur,ne}
+  sampleLoaded: false,    // 是否範例（範例有預算結果）
+  lang: "en",
+};
+
+/* ---------- 範例通告（含預先算好的結果，離線可示範） ---------- */
+const SAMPLES = [
+  {
+    name: "運動會通告（含日期時間）",
+    desc: "含日期、時間、地點 — 可示範日曆",
+    raw: "親愛的家長：\n本校將於二零二五年十二月五日（星期五）下午二時至五時，於九龍城運動場舉行第四十屆周年運動會。家長可於看台觀賽，學生須穿着整齊體育服，並於當日下午一時三十分前到達學校集合。如當天懸掛三號或以上颱風信號，活動將取消。",
+    title: "第四十屆周年運動會",
+    bullets: [
+      "活動名稱與目的：第四十屆周年運動會",
+      "日期與時間：2025 年 12 月 5 日（五）下午 2 時至 5 時，九龍城運動場",
+      "家長須知：學生穿體育服、下午 1:30 前到校集合；掛三號風球則取消",
+    ],
+    plain: "12 月 5 日星期五下晝 2 點到 5 點，喺九龍城運動場開運動會。學生要着體育衫，1 點半之前返到學校。掛咗三號風球就唔使去。",
+    datetime: { y:2025, m:12, d:5, h:14, min:0, endH:17, endMin:0 },
+    tr: {
+      en: "Annual Sports Day: 5 December 2025 (Friday), 2:00–5:00 pm at Kowloon City Sports Ground. Students must wear PE uniform and arrive at school by 1:30 pm. If Typhoon Signal No. 3 or above is hoisted, the event is cancelled.",
+      ur: "سالانہ اسپورٹس ڈے: 5 دسمبر 2025 (جمعہ)، دوپہر 2 بجے سے 5 بجے تک، کولون سٹی اسپورٹس گراؤنڈ۔ طلبہ پی ای یونیفارم پہنیں اور 1:30 بجے تک اسکول پہنچیں۔ اگر طوفان سگنل نمبر 3 یا اس سے اوپر ہو تو تقریب منسوخ ہوگی۔",
+      ne: "वार्षिक खेलकुद दिवस: ५ डिसेम्बर २०२५ (शुक्रबार), दिउँसो २:००–५:०० बजे, काउलुन सिटी खेल मैदान। विद्यार्थीले खेलकुद पोशाक लगाउनु र १:३० बजेभित्र विद्यालय आइपुग्नु पर्नेछ। आँधी सङ्केत नं. ३ वा माथि भए कार्यक्रम रद्द हुनेछ।",
+    },
+  },
+  {
+    name: "繳費通告（含金額與截止日）",
+    desc: "含金額與截止日期 — 可示範「金額必須照抄」",
+    raw: "家長通訊：下學期書籍費港幣三百二十元，請於二零二五年十一月二十八日或之前，經 eClass 網上繳費或將支票交回班主任。逾期繳交者，校方將不保證書籍能於開學日派發。",
+    title: "下學期書籍費繳交通知",
+    bullets: [
+      "繳交項目：下學期書籍費，港幣 320 元",
+      "截止日期：2025 年 11 月 28 日或之前",
+      "家長須知：經 eClass 網上繳費或交支票予班主任；逾期不保證開學日派發",
+    ],
+    plain: "下學期書簿費要交 320 蚊。11 月 28 號之前，用 eClass 網上交，或者寫支票畀班主任。過咗期，開學嗰日未必有書攞。",
+    datetime: { y:2025, m:11, d:28, h:9, min:0, endH:10, endMin:0 },
+    tr: {
+      en: "Second-term book fee: HK$320, due on or before 28 November 2025. Pay via eClass online or hand a cheque to the class teacher. Late payments are not guaranteed to receive books on the first day.",
+      ur: "دوسری مدت کی کتابوں کی فیس: HK$320، آخری تاریخ 28 نومبر 2025 یا اس سے پہلے۔ eClass کے ذریعے آن لائن ادائیگی کریں یا کلاس ٹیچر کو چیک دیں۔ دیر سے ادائیگی پر پہلے دن کتابیں ملنے کی ضمانت نہیں۔",
+      ne: "दोस्रो सेमेस्टरको पुस्तक शुल्क: HK$320, म्याद २८ नोभेम्बर २०२५ वा सोभन्दा अघि। eClass मार्फत अनलाइन भुक्तानी गर्नुहोस् वा कक्षा शिक्षकलाई चेक दिनुहोस्। ढिलो भुक्तानी गरे पहिलो दिन पुस्तक पाइने ग्यारेन्टी छैन।",
+    },
+  },
+  {
+    name: "英文通告（家長會）",
+    desc: "英文原文 — 示範繁中摘要方向",
+    raw: "Dear Parents,\nThe Parent-Teacher Meeting for Primary 3 will be held on 18 November 2025 (Tuesday) from 6:00 pm to 8:00 pm in the school hall. Please bring your child's student handbook. A translator in Urdu and Nepali will be available on site.",
+    title: "P.3 家長會",
+    bullets: [
+      "活動：三年級家長會",
+      "日期時間：2025 年 11 月 18 日（二）晚上 6 時至 8 時，學校禮堂",
+      "須知：請攜帶學生手冊；現場設烏爾都語及尼泊爾語傳譯",
+    ],
+    plain: "11 月 18 號星期二晚 6 點到 8 點，喺學校禮堂開三年班家長會。記得帶學生手冊。現場有烏爾都語同尼泊爾語翻譯。",
+    datetime: { y:2025, m:11, d:18, h:18, min:0, endH:20, endMin:0 },
+    tr: {
+      en: "Primary 3 Parent-Teacher Meeting: 18 November 2025 (Tue), 6:00–8:00 pm, school hall. Bring your child's student handbook. Urdu and Nepali interpretation provided on site.",
+      ur: "پرائمری 3 کی والدین-اساتذہ میٹنگ: 18 نومبر 2025 (منگل)، شام 6 بجے سے 8 بجے، اسکول ہال۔ اپنے بچے کی اسٹوڈنٹ ہینڈ بک ساتھ لائیں۔ اردو اور نیپالی ترجمانی دستیاب ہوگی۔",
+      ne: "प्राथमिक ३ अभिभावक–शिक्षक भेटघाट: १८ नोभेम्बर २०२५ (मंगलबार), साँझ ६:००–८:००, विद्यालय हल। आफ्नो बच्चाको विद्यार्थी ह्यान्डबुक ल्याउनुहोस्। उर्दू र नेपाली दोभाषे उपलब्ध हुनेछ।",
+    },
+  },
+];
+
+/* ================= 工具函數 ================= */
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 3200);
+}
+function setBusy(msg){
+  const b = $("busy");
+  if(msg){ b.textContent = msg; b.classList.add("show"); }
+  else b.classList.remove("show");
+}
+function showResults(){
+  $("emptyState").style.display = "none";
+  $("results").style.display = "block";
+}
+
+/* ================= 延遲載入外部函式庫（不阻塞頁面） ================= */
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = ()=>resolve();
+    s.onerror = ()=>reject(new Error("無法載入函式庫（需要網絡）：" + src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureTesseract(){
+  if(window.Tesseract) return;
+  setBusy("載入 OCR 引擎中…（需網絡）");
+  await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+}
+async function ensurePdf(){
+  if(window.pdfjsLib) return;
+  setBusy("載入 PDF 引擎中…（需網絡）");
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+/* ================= 輸入切換 ================= */
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    const m = tab.dataset.mode;
+    $("modeFile").style.display = m==="file" ? "" : "none";
+    $("modeText").style.display = m==="text" ? "" : "none";
+    $("modeSample").style.display = m==="sample" ? "" : "none";
+  });
+});
+
+const drop = $("drop"), fileInput = $("fileInput");
+drop.addEventListener("click", ()=>fileInput.click());
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.style.borderColor="var(--accent)"}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.style.borderColor=""}));
+drop.addEventListener("drop", e=>{ if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener("change", ()=>{ if(fileInput.files.length) handleFile(fileInput.files[0]); });
+
+/* ================= OCR / PDF / 文字 ================= */
+async function handleFile(file){
+  setBusy("");
+  $("status").textContent = "";
+  try{
+    let text = "";
+    if(file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")){
+      text = await extractPdfText(file);
+      if(!text.trim()){ toast("此 PDF 沒有可抽取的文字（可能是掃描檔）。請截圖後用圖片上傳。"); return; }
+    } else {
+      text = await ocrImage(file);
+    }
+    if(!text.trim()){ toast("未能辨識文字，請重拍或改為貼上文字。"); return; }
+    state.rawText = text.trim();
+    state.sampleLoaded = false;
+    toast("已取得文字，點「分析通知」。");
+  } catch(err){
+    console.error(err);
+    toast("處理檔案時出錯：" + err.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function ocrImage(file){
+  setBusy("OCR 辨識中…（首次需下載語言資料，約 10–30 秒）");
+  await ensureTesseract();
+  const worker = await Tesseract.createWorker(["chi_tra","eng"], 1, {
+    logger: m => { if(m.status === "recognizing text") setBusy("OCR 辨識中… "+Math.round(m.progress*100)+"%"); }
+  });
+  try{
+    const { data } = await worker.recognize(file);
+    return data.text || "";
+  } finally {
+    await worker.terminate();
+  }
+}
+
+async function extractPdfText(file){
+  setBusy("PDF 抽取文字中…");
+  await ensurePdf();
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let out = "";
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    out += tc.items.map(it=>it.str).join(" ") + "\n";
+  }
+  return out;
+}
+
+/* ================= 範例載入 ================= */
+function renderSamples(){
+  $("sampleList").innerHTML = SAMPLES.map((s,i)=>
+    `<div class="sample" data-i="${i}"><b>${s.name}</b><span>${s.desc}</span></div>`).join("");
+  document.querySelectorAll(".sample").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      loadSample(Number(el.dataset.i));
+    });
+  });
+}
+function loadSample(i){
+  const s = SAMPLES[i];
+  state.rawText = s.raw;
+  state.title = s.title;
+  state.bullets = s.bullets.slice();
+  state.plain = s.plain;
+  state.translations = s.tr;
+  state.datetime = makeDate(s.datetime);
+  state.sampleLoaded = true;
+  state.lang = $("langSelect").value;
+  renderAll();
+  toast("已載入範例（離線模式，結果為預先校對）");
+}
+
+/* ================= 主流程：分析 ================= */
+$("btnProcess").addEventListener("click", async ()=>{
+  const mode = document.querySelector(".tab.active").dataset.mode;
+  if(mode === "text"){
+    const tv = $("textInput").value.trim();
+    if(tv){ state.rawText = tv; state.sampleLoaded = false; }
+  }
+  if(!state.rawText){ toast("請先提供通告內容。"); return; }
+
+  if(state.sampleLoaded){ renderAll(); return; }
+
+  if(KEY){
+    try{
+      setBusy("Gemini 分析中…");
+      const r = await geminiSummary(state.rawText);
+      state.title = r.title || "（未命名活動）";
+      state.bullets = (r.bullets && r.bullets.length ? r.bullets : ["（未能擷取重點）"]);
+      state.plain = r.plain || state.rawText;
+      state.translations = {};
+      state.datetime = r.datetime ? makeDateFromISO(r.datetime) : parseHKDateTime(state.rawText);
+    } catch(err){
+      console.error(err);
+      toast("AI 分析失敗，改用離線摘要：" + err.message);
+      fallbackSummary();
+    }
+  } else {
+    fallbackSummary();
+  }
+  renderAll();
+});
+
+/* 離線摘要：首三行做 bullet + 日期抽取 */
+function fallbackSummary(){
+  const lines = state.rawText.split(/\n+/).map(s=>s.trim()).filter(Boolean).slice(0,3);
+  state.title = lines[0] ? lines[0].slice(0, 30) : "（未命名活動）";
+  state.bullets = lines.length ? lines : ["（未能擷取重點）"];
+  state.plain = state.rawText;
+  state.translations = {};
+  state.datetime = parseHKDateTime(state.rawText);
+}
+
+/* ================= Gemini 呼叫 ================= */
+async function geminiJSON(prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent?key=${encodeURIComponent(KEY)}`;
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      contents:[{ parts:[{ text: prompt }] }],
+      generationConfig:{ responseMimeType:"application/json", temperature:0.2 },
+    }),
+  });
+  const j = await res.json();
+  if(j.error) throw new Error(j.error.message || "API 錯誤");
+  const txt = j.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!txt) throw new Error("沒有回傳內容");
+  // 容錯：去掉可能的 ```json 包覆
+  const clean = txt.replace(/```json|```/g,"").trim();
+  return JSON.parse(clean);
+}
+
+async function geminiSummary(text){
+  const prompt = `你是「校園通 CampusPass」，幫助香港中文讀寫能力有限的家長閱讀學校通告。\n請就以下通告，輸出「嚴格 JSON」（不要 markdown、不要解釋），鍵名固定為：\n{\n "title": "活動/事項的簡短中文名稱",\n "bullets": ["剛好 3 句重點：1) 活動名稱與目的；2) 日期/截止日期與金額（如有）；3) 家長與學生須知"],\n "plain": "2–4 句口語化、無術語的粵語白話摘要",\n "datetime": {"start":"YYYY-MM-DDTHH:mm","end":"YYYY-MM-DDTHH:mm"} 或 null\n}\n規則：日期與金額必須與原文完全一致；不確定就填 null；不要自行增補原文沒有的資訊。\n\n通告原文：\n${text}`;
+  return geminiJSON(prompt);
+}
+
+async function geminiTranslate(text, langName){
+  const prompt = `將以下香港學校通告摘要，翻譯成${langName}。\n輸出「嚴格 JSON」：{"translation":"..."}。\n用自然、簡單的${langName}，人名地名日期保持不變，不要加原文沒有的資訊。\n\n${text}`;
+  const r = await geminiJSON(prompt);
+  return r.translation || "";
+}
+
+/* ================= 翻譯 ================= */
+$("btnTranslate").addEventListener("click", translate);
+$("langSelect").addEventListener("change", ()=>{ state.lang = $("langSelect").value; });
+
+async function translate(){
+  const lang = $("langSelect").value;
+  state.lang = lang;
+  const LANG_NAME = { en:"English（英文）", ur:"Urdu（烏爾都語）", ne:"Nepali（尼泊爾語）" };
+  const src = state.plain || state.bullets.join(" ");
+  if(!src){ toast("先分析通知再翻譯。"); return; }
+
+  if(state.translations[lang]){ $("rTrans").textContent = state.translations[lang]; return; }
+
+  if(!KEY){
+    $("rTrans").textContent = "需要 API Key 才能即時翻譯此語言。可改用「範例通告」示範（範例含已校對翻譯）。";
+    return;
+  }
+  try{
+    setBusy("翻譯中…");
+    const t = await geminiTranslate(src, LANG_NAME[lang]);
+    state.translations[lang] = t;
+    $("rTrans").textContent = t;
+  } catch(err){
+    console.error(err);
+    toast("翻譯失敗：" + err.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+/* ================= 語音朗讀 ================= */
+let speaking = false, paused = false;
+$("rate").addEventListener("input", ()=>{ $("rateVal").textContent = $("rate").value + "×"; });
+function speak(text, lang){
+  if(!text){ toast("沒有可朗讀的內容。"); return; }
+  if(!("speechSynthesis" in window)){ toast("此瀏覽器不支援語音朗讀。"); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = parseFloat($("rate").value);
+  u.onend = ()=>{ speaking = false; paused = false; };
+  u.onerror = ()=>{ speaking = false; paused = false; toast("語音播放失敗，可能缺少該語音。"); };
+  speechSynthesis.speak(u);
+  speaking = true; paused = false;
+}
+$("btnSpeakCant").addEventListener("click", ()=>{ speak(state.plain || state.rawText, "zh-HK"); });
+$("btnSpeakEn").addEventListener("click", ()=>{
+  const t = state.translations.en || state.plain;
+  if(!state.translations.en && !state.sampleLoaded){ toast("請先點「翻譯」取得英文版本。"); return; }
+  speak(t, "en-US");
+});
+$("btnPause").addEventListener("click", ()=>{
+  if(!speaking) return;
+  if(paused){ speechSynthesis.resume(); paused = false; }
+  else { speechSynthesis.pause(); paused = true; }
+});
+$("btnStop").addEventListener("click", ()=>{ speechSynthesis.cancel(); speaking=false; paused=false; });
+
+/* ================= 日期解析 ================= */
+function makeDate(o){ // 從樣本的 y/m/d 欄位
+  if(!o) return null;
+  const s = new Date(o.y, o.m-1, o.d, o.h, o.min, 0);
+  const e = new Date(o.y, o.m-1, o.d, o.endH, o.endMin, 0);
+  return { start:s, end:e };
+}
+function makeDateFromISO(dt){
+  const s = new Date(dt.start), e = new Date(dt.end);
+  if(isNaN(s)) return null;
+  if(isNaN(e)){ e.setTime(s.getTime()); e.setHours(e.getHours()+1); }
+  return { start:s, end:e };
+}
+/* 香港日期格式的簡易抽取（離線後備） */
+function parseHKDateTime(text){
+  let y,m,d,hh=9,mm=0,eh=10,em=0;
+  let dm = text.match(/(\d{4})\s*[年\/\-\.]\s*(\d{1,2})\s*[月\/\-\.]\s*(\d{1,2})\s*日?/);
+  if(!dm) dm = text.match(/(\d{1,2})\s*[\/\-]\s*(\d{1,2})\s*[\/\-]\s*(\d{4})/);
+  if(dm){
+    if(dm[1].length===4){ y=+dm[1]; m=+dm[2]; d=+dm[3]; }
+    else { d=+dm[1]; m=+dm[2]; y=+dm[3]; }
+  } else return null;
+  const now = new Date();
+  if(!y) y = now.getFullYear();
+  const t = text.match(/((上午|下午|晚上|中午)\s*)?(\d{1,2})\s*[時時:點]\s*(\d{1,2})?\s*分?/);
+  if(t){
+    let h = +t[3]; const mm = t[4] ? +t[4] : 0;
+    if(t[2] === "下午" && h < 12) h += 12;
+    if(t[2] === "晚上" && h < 12) h += 12;
+    if(t[2] === "中午" && h === 12) h = 12;
+    hh = h; mm = mm; eh = h+1; em = mm;
+  }
+  const start = new Date(y, m-1, d, hh, mm, 0);
+  const end = new Date(y, m-1, d, eh, em, 0);
+  return { start, end };
+}
+
+/* ================= 日曆 ================= */
+function fmtUTC(dt){ // YYYYMMDDTHHMMSSZ
+  const p = (n)=>String(n).padStart(2,"0");
+  return `${dt.getUTCFullYear()}${p(dt.getUTCMonth()+1)}${p(dt.getUTCDate())}T${p(dt.getUTCHours())}${p(dt.getUTCMinutes())}00Z`;
+}
+function googleCalURL(title, dt){
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE"
+    + "&text=" + encodeURIComponent(title)
+    + "&dates=" + fmtUTC(dt.start) + "/" + fmtUTC(dt.end)
+    + "&details=" + encodeURIComponent(state.plain || "")
+    + "&ctz=Asia/Hong_Kong";
+}
+function makeICS(title, dt){
+  const p = (n)=>String(n).padStart(2,"0");
+  const fmt = (d)=>`${d.getUTCFullYear()}${p(d.getUTCMonth()+1)}${p(d.getUTCDate())}T${p(d.getUTCHours())}${p(d.getUTCMinutes())}00Z`;
+  return [
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//CampusPass//HK//TC","CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    "UID:" + Date.now() + "@campuspass",
+    "DTSTAMP:" + fmt(new Date()),
+    "DTSTART:" + fmt(dt.start),
+    "DTEND:" + fmt(dt.end),
+    "SUMMARY:" + title.replace(/,/g,"\\,"),
+    "DESCRIPTION:" + (state.plain||"").replace(/,/g,"\\,").replace(/\n/g,"\\n"),
+    "END:VEVENT","END:VCALENDAR"
+  ].join("\r\n");
+}
+function downloadICS(){
+  if(!state.datetime){ toast("沒有日期可加入日曆。"); return; }
+  const blob = new Blob([makeICS(state.title, state.datetime)], {type:"text/calendar"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.title || "活動") + ".ics";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+$("btnICS").addEventListener("click", downloadICS);
+
+/* ================= 呈現 ================= */
+function renderAll(){
+  showResults();
+  $("rTitle").textContent = state.title || "（未命名活動）";
+  $("rBullets").innerHTML = (state.bullets||[]).map(b=>`<li>${escapeHtml(b)}</li>`).join("");
+  $("rPlain").textContent = state.plain || state.rawText;
+  $("rOrig").textContent = state.rawText;
+
+  // 翻譯區
+  state.lang = $("langSelect").value;
+  $("rTrans").textContent = state.translations[state.lang] || "點「翻譯」載入。";
+
+  // 日期
+  if(state.datetime){
+    const s = state.datetime.start, e = state.datetime.end;
+    const p=(n)=>String(n).padStart(2,"0");
+    $("rDate").textContent = `${s.getFullYear()}-${p(s.getMonth()+1)}-${p(s.getDate())} ${p(s.getHours())}:${p(s.getMinutes())} → ${p(e.getHours())}:${p(e.getMinutes())}`;
+    $("gcal").style.display = "inline-flex";
+    $("gcal").href = googleCalURL(state.title, state.datetime);
+  } else {
+    $("rDate").textContent = "未偵測到日期";
+    $("gcal").style.display = "none";
+  }
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ================= 設定持久化 ================= */
+$("apiKey").value = KEY;
+$("modelName").value = MODEL;
+$("apiKey").addEventListener("change", ()=>{ KEY = $("apiKey").value; localStorage.setItem("cp_key", KEY); });
+$("modelName").addEventListener("change", ()=>{ MODEL = $("modelName").value; localStorage.setItem("cp_model", MODEL); });
+
+renderSamples();
+</script>
+</body>
+</html>
